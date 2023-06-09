@@ -109,7 +109,22 @@ class App extends Component {
       requestOptions
     )
       .then((response) => response.json())
-      .then((result) => this.displayFaceBox(this.claculateFaceLocation(result)))
+      .then((result) => {
+        if (result) {
+          fetch('http://localhost:3000/image', {
+            method: 'put',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              id: this.state.user.id,
+            }),
+          })
+            .then((response) => response.json())
+            .then((count) => {
+              this.setState(Object.assign(this.state.user, { entries: count }));
+            });
+        }
+        this.displayFaceBox(this.claculateFaceLocation(result));
+      })
       .catch((error) => console.log('error', error));
   };
 
@@ -134,7 +149,10 @@ class App extends Component {
         {route === 'home' ? (
           <div>
             <Logo />
-            <Rank />
+            <Rank
+              name={this.state.user.name}
+              entries={this.state.user.entries}
+            />
             <ImageLinkForm
               onInputChange={this.onInputChange}
               onButtonSubmit={this.onButtonSubmit}
@@ -142,7 +160,7 @@ class App extends Component {
             <FaceRecognition box={box} imageUrl={imageUrl} />
           </div>
         ) : route === 'signin' ? (
-          <SignIn onRouteChange={this.onRouteChange} />
+          <SignIn loadUser={this.loadUser} onRouteChange={this.onRouteChange} />
         ) : (
           <Register
             loadUser={this.loadUser}
